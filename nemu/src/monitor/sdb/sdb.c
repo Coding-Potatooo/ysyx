@@ -49,6 +49,9 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
+  //llwwddong_start
+  set_nemu_state(NEMU_QUIT,0,0);
+  //llwwddong_done
   return -1;
 }
 
