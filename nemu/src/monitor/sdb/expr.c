@@ -62,7 +62,7 @@ static struct rule
     {"\\(", TK_LP}, // left parenthesis
     {"\\)", TK_RP}, // right parenthesis
 
-    {"[0-9]+", TK_DEC}, // decimal numbers
+    {"[0-9]+u?", TK_DEC}, // decimal numbers, u for unsigned int.
 
 };
 
@@ -96,7 +96,7 @@ typedef struct token
   char str[32];
 } Token;
 
-static Token tokens[32] __attribute__((used)) = {};
+static Token tokens[65536] __attribute__((used)) = {};
 static int nr_token __attribute__((used)) = 0;
 /*
 __attribute__((used)) 是 GCC 和 Clang 编译器的扩展语法，用于告诉编译器确保一个变量或函数即使在没有显式引用的情况下也保留在最终的可执行文件中。
@@ -160,8 +160,11 @@ static bool make_token(char *e)
 }
 
 bool check_parenthesis(int p, int q)
+/*
+ if tokens[p] is LP, tokens[q] is RP and *they are a pair!*, return true;
+*/
 {
-  if (tokens[p].type != TK_LP)
+  if (tokens[p].type != TK_LP || tokens[q].type != TK_RP)
   {
     return false;
   }
@@ -176,7 +179,11 @@ bool check_parenthesis(int p, int q)
     {
       if (stack_idx > 0)
       {
-        --stack_idx; // pop a LP
+        --stack_idx;                 // pop a LP
+        if (stack_idx == 0 && p < q) // the first LP doesnt match the last RP, they are not a pair
+        {
+          return false;
+        }
       }
       else // more RightParenthesis than LeftParenthesis
       {
@@ -217,7 +224,7 @@ word_t eval(int p, int q)
       PRI_MUL,
     };
     enum priority pri = PRI_ADD; // the value of priority samller, the less prior
-    bool in_parenthesis = false;
+    int in_parenthesis = 0;
     bool found_flag = false; // if the maini_op is found, break both for loops(this found_flag is for the out layer)
     int i = p;
     for (pri = PRI_ADD; pri <= PRI_MUL; pri++)
@@ -226,11 +233,11 @@ word_t eval(int p, int q)
       {
         if (tokens[i].type == TK_RP)
         {
-          in_parenthesis = true;
+          in_parenthesis += 1;
         }
         else if (tokens[i].type == TK_LP)
         {
-          in_parenthesis = false;
+          in_parenthesis -= 1;
         }
 
         else if (!in_parenthesis && pri == PRI_ADD && (tokens[i].type == '+' || tokens[i].type == '-'))
@@ -259,7 +266,7 @@ word_t eval(int p, int q)
       res1 = eval(p, i - 1);
       res2 = eval(i + 1, q);
       result = res1 * res2;
-      printf("%d=%d * %d\n", result, res1, res2);
+      // printf("%d=%d * %d\n", result, res1, res2);
       break;
     case '/':
       res1 = eval(p, i - 1);
@@ -269,19 +276,19 @@ word_t eval(int p, int q)
         assert(0);
       }
       result = res1 / res2;
-      printf("%d=%d / %d\n", result, res1, res2);
+      // printf("%d=%d / %d\n", result, res1, res2);
       break;
     case '+':
       res1 = eval(p, i - 1);
       res2 = eval(i + 1, q);
       result = res1 + res2;
-      printf("%d=%d + %d\n", result, res1, res2);
+      // printf("%d=%d + %d\n", result, res1, res2);
       break;
     case '-':
       res1 = eval(p, i - 1);
       res2 = eval(i + 1, q);
       result = res1 - res2;
-      printf("%d=%d - %d\n", result, res1, res2);
+      // printf("%d=%d - %d\n", result, res1, res2);
       break;
     default:
       assert(0);
@@ -298,9 +305,8 @@ word_t expr(char *e, bool *success)
     return 0;
   }
 
-  /* TODO: Insert codes to evaluate the expression. */
-  printf("check_parenthesis: %s\n", check_parenthesis(0, nr_token - 1) ? "T" : "F");
-  printf("eval: %d\n", eval(0, nr_token - 1));
+  word_t val = eval(0, nr_token - 1);
+  // printf("eval: %d\n", val);
 
-  return 0;
+  return val;
 }
