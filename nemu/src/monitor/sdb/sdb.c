@@ -101,16 +101,15 @@ static int cmd_info(char *args)
 
 static int cmd_x(char *args)
 {
-  printf("This is cmd_x\n");
-  printf("args:%s\n", args);
   char *len_str = strtok(args, " ");
   int len = atoi(len_str);
   char *addr_str = strtok(NULL, " ");
   char ** endptr = NULL;
   vaddr_t addr = strtoull(addr_str,endptr,16);
+  printf("addr\t\t\t value\n");
   for (int i = 0; i < len; i++)
   {
-      printf("%x      %x\n",addr,vaddr_read(addr, 4));
+      printf("[%x]\t\t%x\n",addr,vaddr_read(addr, 4));
       addr += 4; //N*4Bytes
   }
 
@@ -121,6 +120,8 @@ static int cmd_p(char *args)
 {
   printf("This is cmd_p\n");
   printf("args:%s\n", args);
+  bool * success = false;
+  expr(args,success);
   return 0;
 }
 

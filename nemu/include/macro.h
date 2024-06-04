@@ -93,6 +93,9 @@
 #define PG_ALIGN __attribute((aligned(4096)))
 
 #if !defined(likely)
+/*
+__builtin_expect是GCC（GNU Compiler Collection）编译器的一个内建函数，用于向编译器提供分支预测信息
+*/
 #define likely(cond)   __builtin_expect(cond, 1)
 #define unlikely(cond) __builtin_expect(cond, 0)
 #endif
