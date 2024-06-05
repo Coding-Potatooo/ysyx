@@ -147,8 +147,8 @@ static bool make_token(char *e)
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
 
-        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-            i, rules[i].regex, position, substr_len, substr_len, substr_start);
+        // Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+        //     i, rules[i].regex, position, substr_len, substr_len, substr_start);
 
         position += substr_len;
 
@@ -247,6 +247,89 @@ bool check_parenthesis(int p, int q)
   return !(stack_idx > 0); // stack_idx>0 =>more LeftParenthesis than RightParenthesis; parenthesis match only when stack_idx = 0 when p>q
 }
 
+int find_main_op(int p, int q)
+/*
+  return the index of the main_op, i.e the last processed opterator.
+  using the index of the main_op, can be solved recursively.
+*/
+
+{
+  assert(!check_parenthesis(p, q));
+  enum priority // must assign as default: 0,1,2... to facilitate "for" iteration.
+  {
+    /*
+    https://blog.csdn.net/changexhao/article/details/82556761
+    the value of priority samller, the less prior
+    */
+    PRI_OR,      // or
+    PRI_AND,     // and
+    PRI_COMPARE, // ==, !=
+    PRI_ADD,     // add, minus
+    PRI_MUL,     // multiply, divide
+    PRI_SINGLE,  // dereference, reverse, not
+  };
+  enum priority pri = PRI_ADD; //
+  int in_parenthesis = 0;
+  bool found_flag = false; // if the maini_op is found, break both for loops(this found_flag is for the out layer)
+  int main_op_loc = p;
+  for (pri = 0; pri <= PRI_SINGLE; pri++)
+  {
+    for (main_op_loc = q; main_op_loc >= p; main_op_loc--)
+    {
+      if (tokens[main_op_loc].type == TK_RP)
+      {
+        in_parenthesis += 1;
+      }
+      else if (tokens[main_op_loc].type == TK_LP)
+      {
+        in_parenthesis -= 1;
+      }
+
+      else if (!in_parenthesis && pri == PRI_OR && (tokens[main_op_loc].type == TK_OR))
+      {
+        found_flag = true;
+        break;
+      }
+
+      else if (!in_parenthesis && pri == PRI_AND && (tokens[main_op_loc].type == TK_AND))
+      {
+        found_flag = true;
+        break;
+      }
+
+      else if (!in_parenthesis && pri == PRI_COMPARE &&
+               (tokens[main_op_loc].type == TK_EQ || tokens[main_op_loc].type == TK_NE || tokens[main_op_loc].type == TK_GE ||
+                tokens[main_op_loc].type == TK_LE || tokens[main_op_loc].type == TK_LT || tokens[main_op_loc].type == TK_GT))
+      {
+        found_flag = true;
+        break;
+      }
+
+      else if (!in_parenthesis && pri == PRI_ADD && (tokens[main_op_loc].type == '+' || tokens[main_op_loc].type == '-'))
+      {
+        found_flag = true;
+        break;
+      }
+
+      else if (!in_parenthesis && pri == PRI_MUL && (tokens[main_op_loc].type == '*' || tokens[main_op_loc].type == '/'))
+      {
+        found_flag = true;
+        break;
+      }
+      else if (!in_parenthesis && pri == PRI_SINGLE && (tokens[main_op_loc].type == TK_DEREF || tokens[main_op_loc].type == TK_REV || tokens[main_op_loc].type == TK_NOT))
+      {
+        found_flag = true;
+        break;
+      }
+    }
+    if (found_flag)
+    {
+      break;
+    }
+  }
+  return main_op_loc;
+}
+
 word_t eval(int p, int q)
 /*Recursive evaluation
  */
@@ -271,80 +354,7 @@ word_t eval(int p, int q)
   }
   else // Given the else if check_parenthesis clause, there is no parenthesis at p,q (there may be parentheses inside...)
   {
-
-    enum priority // must assign as default: 0,1,2... to facilitate "for" iteration.
-    {
-      /*
-      https://blog.csdn.net/changexhao/article/details/82556761
-      the value of priority samller, the less prior
-      */
-      PRI_OR,      // or
-      PRI_AND,     // and
-      PRI_COMPARE, // ==, !=
-      PRI_ADD,     // add, minus
-      PRI_MUL,     // multiply, divide
-      PRI_SINGLE,  // dereference, reverse, not
-    };
-    enum priority pri = PRI_ADD; //
-    int in_parenthesis = 0;
-    bool found_flag = false; // if the maini_op is found, break both for loops(this found_flag is for the out layer)
-    int i = p;
-    for (pri = 0; pri <= PRI_SINGLE; pri++)
-    {
-      for (i = q; i >= p; i--)
-      {
-        if (tokens[i].type == TK_RP)
-        {
-          in_parenthesis += 1;
-        }
-        else if (tokens[i].type == TK_LP)
-        {
-          in_parenthesis -= 1;
-        }
-
-        else if (!in_parenthesis && pri == PRI_OR && (tokens[i].type == TK_OR))
-        {
-          found_flag = true;
-          break;
-        }
-
-        else if (!in_parenthesis && pri == PRI_AND && (tokens[i].type == TK_AND))
-        {
-          found_flag = true;
-          break;
-        }
-
-        else if (!in_parenthesis && pri == PRI_COMPARE &&
-                 (tokens[i].type == TK_EQ || tokens[i].type == TK_NE || tokens[i].type == TK_GE ||
-                  tokens[i].type == TK_LE || tokens[i].type == TK_LT || tokens[i].type == TK_GT))
-        {
-          found_flag = true;
-          break;
-        }
-
-        else if (!in_parenthesis && pri == PRI_ADD && (tokens[i].type == '+' || tokens[i].type == '-'))
-        {
-          found_flag = true;
-          break;
-        }
-
-        else if (!in_parenthesis && pri == PRI_MUL && (tokens[i].type == '*' || tokens[i].type == '/'))
-        {
-          found_flag = true;
-          break;
-        }
-        else if (!in_parenthesis && pri == PRI_SINGLE && (tokens[i].type == TK_DEREF || tokens[i].type == TK_REV || tokens[i].type == TK_NOT))
-        {
-          found_flag = true;
-          break;
-        }
-      }
-      if (found_flag)
-      {
-        break;
-      }
-    }
-
+    int i = find_main_op(p, q);
     Token main_op = tokens[i];
     word_t result = 0, res1 = 0, res2 = 0;
     switch (main_op.type)

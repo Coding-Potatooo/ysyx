@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
   init_monitor(argc, argv);
 #endif
 
-// #define TEST_EXPR
+#define TEST_EXPR
 #ifdef TEST_EXPR
   test_expr();
 #endif
