@@ -20,14 +20,16 @@
  */
 #include <regex.h>
 
+#include "../../../include/memory/vaddr.h"
 enum
 {
   /* TODO: Add more token types */
   TK_NOTYPE = 256,
   TK_EQ,
-  TK_NQ,
+  TK_NE,
 
   TK_DEC,
+  TK_HEX,
 
   TK_OR,
   TK_AND,
@@ -35,6 +37,12 @@ enum
 
   TK_LP,
   TK_RP,
+
+  TK_REG,
+
+  TK_DEREF, // dereference
+
+  TK_REV, // reverse
 
 };
 
@@ -58,11 +66,16 @@ static struct rule
     {"\\/", '/'}, // divide
 
     {"==", TK_EQ}, // equal
+    {"!=", TK_NE}, // not equal
 
     {"\\(", TK_LP}, // left parenthesis
     {"\\)", TK_RP}, // right parenthesis
 
-    {"[0-9]+u?", TK_DEC}, // decimal numbers, u for unsigned int.
+    // hex must be before dec!
+    {"0[xX][0-9a-fA-F]+", TK_HEX}, // heximal numbers
+    {"[0-9]+u?", TK_DEC},          // decimal numbers, u for unsigned int.
+
+    {"\\$[a-z]{0,2}[0-9]{0,2}", TK_REG} // registers
 
 };
 
@@ -129,16 +142,44 @@ static bool make_token(char *e)
 
         position += substr_len;
 
-        /* TODO: Now a new token is recognized with rules[i]. Add codes
+        /* Now a new token is recognized with rules[i]. Add codes
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
+        Token token;
         switch (rules[i].token_type)
         {
         case TK_NOTYPE:
           break;
+
+        case TK_REG:
+          bool success = false;
+          token.type = TK_DEC;
+          char regname[4] = {0};
+          memcpy(regname, substr_start, substr_len);
+          word_t reg_val = isa_reg_str2val(regname, &success);
+          if (!success)
+          {
+            assert(0);
+          }
+          sprintf(token.str, "%u", reg_val);
+          tokens[nr_token++] = token;
+          break;
+
+        case TK_HEX:
+          // convert heximal to decimal
+          char hex_str[16 + 1] = {0};
+          char dec_str[20 + 1] = {0};
+          memcpy(hex_str, substr_start, substr_len + 2); //+2 to omit the 0x or 0X
+          word_t val = 0;
+          sscanf(hex_str, "%x", &val);
+          sprintf(dec_str, "%d", val);
+          token.type = TK_DEC;
+          memcpy(token.str, dec_str, 20 + 1);
+          tokens[nr_token++] = token;
+          break;
+
         default:
-          Token token;
           token.type = rules[i].token_type;
           memcpy(token.str, substr_start, substr_len);
           token.str[substr_len] = 0; // str end with 0
@@ -197,6 +238,8 @@ bool check_parenthesis(int p, int q)
 }
 
 word_t eval(int p, int q)
+/*Recursive evaluation
+ */
 {
   if (p > q)
   { /*TODO: handle bad expression
@@ -216,18 +259,27 @@ word_t eval(int p, int q)
      */
     return eval(p + 1, q - 1);
   }
-  else // Given the else if check_parenthesis clause, there is no parenthesis at p,q (maybe insied...)
+  else // Given the else if check_parenthesis clause, there is no parenthesis at p,q (there may be parentheses inside...)
   {
-    enum priority
+
+    enum priority // must assign as default: 0,1,2... to facilitate "for" iteration.
     {
-      PRI_ADD,
-      PRI_MUL,
+      /*
+      https://blog.csdn.net/changexhao/article/details/82556761
+      the value of priority samller, the less prior
+      */
+      PRI_OR,      // or
+      PRI_AND,     // and
+      PRI_COMPARE, // ==, !=
+      PRI_ADD,     // add, minus
+      PRI_MUL,     // multiply, divide
+      PRI_SINGLE,  // dereference, reverse, not
     };
-    enum priority pri = PRI_ADD; // the value of priority samller, the less prior
+    enum priority pri = PRI_ADD; //
     int in_parenthesis = 0;
     bool found_flag = false; // if the maini_op is found, break both for loops(this found_flag is for the out layer)
     int i = p;
-    for (pri = PRI_ADD; pri <= PRI_MUL; pri++)
+    for (pri = 0; pri <= PRI_SINGLE; pri++)
     {
       for (i = q; i >= p; i--)
       {
@@ -240,6 +292,24 @@ word_t eval(int p, int q)
           in_parenthesis -= 1;
         }
 
+        else if (!in_parenthesis && pri == PRI_OR && (tokens[i].type == TK_OR))
+        {
+          found_flag = true;
+          break;
+        }
+
+        else if (!in_parenthesis && pri == PRI_AND && (tokens[i].type == TK_AND))
+        {
+          found_flag = true;
+          break;
+        }
+
+        else if (!in_parenthesis && pri == PRI_COMPARE && (tokens[i].type == TK_EQ || tokens[i].type == TK_NE))
+        {
+          found_flag = true;
+          break;
+        }
+
         else if (!in_parenthesis && pri == PRI_ADD && (tokens[i].type == '+' || tokens[i].type == '-'))
         {
           found_flag = true;
@@ -247,6 +317,11 @@ word_t eval(int p, int q)
         }
 
         else if (!in_parenthesis && pri == PRI_MUL && (tokens[i].type == '*' || tokens[i].type == '/'))
+        {
+          found_flag = true;
+          break;
+        }
+        else if (!in_parenthesis && pri == PRI_SINGLE && (tokens[i].type == TK_DEREF || tokens[i].type == TK_REV || tokens[i].type == TK_NOT))
         {
           found_flag = true;
           break;
@@ -262,6 +337,35 @@ word_t eval(int p, int q)
     word_t result = 0, res1 = 0, res2 = 0;
     switch (main_op.type)
     {
+    case TK_DEREF:
+      vaddr_t vaddr = atoi(tokens[i + 1].str);
+      result = vaddr_read(vaddr, 1);
+      break;
+    case TK_REV:
+      result = -eval(i + 1, q);
+      break;
+    case TK_NOT:
+      result = eval(i + 1, q) ? 1 : 0;
+    case TK_OR:
+      res1 = eval(p, i - 1);
+      res2 = eval(i + 1, q);
+      result = (res1 || res2) ? 1 : 0;
+      break;
+    case TK_AND:
+      res1 = eval(p, i - 1);
+      res2 = eval(i + 1, q);
+      result = (res1 && res2) ? 1 : 0;
+      break;
+    case TK_NE:
+      res1 = eval(p, i - 1);
+      res2 = eval(i + 1, q);
+      result = (res1 != res2) ? 1 : 0;
+      break;
+    case TK_EQ:
+      res1 = eval(p, i - 1);
+      res2 = eval(i + 1, q);
+      result = (res1 == res2) ? 1 : 0;
+      break;
     case '*':
       res1 = eval(p, i - 1);
       res2 = eval(i + 1, q);
@@ -304,9 +408,17 @@ word_t expr(char *e, bool *success)
     *success = false;
     return 0;
   }
+  /*Logic to deal with dereference.
+    Set * appeared in deference as TK_DEREF;
+  */
+  for (int i = 0; i < nr_token; i++)
+  {
+    if (tokens[i].type == '*' && (i == 0 || (tokens[i - 1].type != TK_HEX && tokens[i - 1].type != TK_DEC && tokens[i - 1].type != TK_REG && tokens[i - 1].type != TK_RP)))
+    {
+      tokens[i].type = TK_DEREF;
+    }
+  }
 
   word_t val = eval(0, nr_token - 1);
-  // printf("eval: %d\n", val);
-
   return val;
 }

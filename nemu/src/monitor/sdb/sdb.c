@@ -55,10 +55,8 @@ static int cmd_c(char *args)
 
 static int cmd_q(char *args)
 {
-  // llwwddong_start
   // set_nemu_state(NEMU_QUIT, 0, 0);
   nemu_state.state = NEMU_QUIT;
-  // llwwddong_done
   return -1;
 }
 
@@ -77,8 +75,6 @@ static int cmd_si(char *args)
 
 static int cmd_info(char *args)
 {
-  // printf("This is cmd_info\n");
-  // printf("args:%s\n", args);
   if (args == NULL)
   {
     printf("Please provide subcmd: [r|w], r for register, w for watchpoint\n");
@@ -104,13 +100,13 @@ static int cmd_x(char *args)
   char *len_str = strtok(args, " ");
   int len = atoi(len_str);
   char *addr_str = strtok(NULL, " ");
-  char ** endptr = NULL;
-  vaddr_t addr = strtoull(addr_str,endptr,16);
+  char **endptr = NULL;
+  vaddr_t addr = strtoull(addr_str, endptr, 16);
   printf("addr\t\t\t value\n");
   for (int i = 0; i < len; i++)
   {
-      printf("[%x]\t\t%x\n",addr,vaddr_read(addr, 4));
-      addr += 4; //N*4Bytes
+    printf("[%x]\t\t%x\n", addr, vaddr_read(addr, 4));
+    addr += 4; // N*4Bytes
   }
 
   return 0;
@@ -118,10 +114,9 @@ static int cmd_x(char *args)
 
 static int cmd_p(char *args)
 {
-  printf("This is cmd_p\n");
-  printf("args:%s\n", args);
-  bool * success = false;
-  expr(args,success);
+  bool success = false;
+  word_t res = expr(args, &success);
+  printf("%u\n", res);
   return 0;
 }
 

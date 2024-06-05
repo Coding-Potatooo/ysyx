@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
   init_monitor(argc, argv);
 #endif
 
-#define TEST_EXPR 1
+// #define TEST_EXPR
 #ifdef TEST_EXPR
   test_expr();
 #endif
@@ -70,8 +70,8 @@ void test_expr()
     char *golden_result_str = input_str;
     char *expr_str = delimiter_pos + 1;
 
-    bool *success = false;
-    word_t eval_result = expr(expr_str, success);
+    bool success = false;
+    word_t eval_result = expr(expr_str, &success);
     word_t golden_result = atoi(golden_result_str);
     if (golden_result != eval_result)
     {
