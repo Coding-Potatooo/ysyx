@@ -27,6 +27,10 @@ enum
   TK_NOTYPE = 256,
   TK_EQ,
   TK_NE,
+  TK_GE,
+  TK_GT,
+  TK_LE,
+  TK_LT,
 
   TK_DEC,
   TK_HEX,
@@ -67,6 +71,12 @@ static struct rule
 
     {"==", TK_EQ}, // equal
     {"!=", TK_NE}, // not equal
+    {">=", TK_GE}, // greater or equal
+    {"<=", TK_LE}, // less or equal
+    {"<", TK_LT},  // greater than
+    {">", TK_GT},  // less than
+
+    {"!", TK_NOT}, // logic not
 
     {"\\(", TK_LP}, // left parenthesis
     {"\\)", TK_RP}, // right parenthesis
@@ -304,7 +314,9 @@ word_t eval(int p, int q)
           break;
         }
 
-        else if (!in_parenthesis && pri == PRI_COMPARE && (tokens[i].type == TK_EQ || tokens[i].type == TK_NE))
+        else if (!in_parenthesis && pri == PRI_COMPARE &&
+                 (tokens[i].type == TK_EQ || tokens[i].type == TK_NE || tokens[i].type == TK_GE ||
+                  tokens[i].type == TK_LE || tokens[i].type == TK_LT || tokens[i].type == TK_GT))
         {
           found_flag = true;
           break;
@@ -346,6 +358,7 @@ word_t eval(int p, int q)
       break;
     case TK_NOT:
       result = eval(i + 1, q) ? 1 : 0;
+
     case TK_OR:
       res1 = eval(p, i - 1);
       res2 = eval(i + 1, q);
@@ -365,6 +378,26 @@ word_t eval(int p, int q)
       res1 = eval(p, i - 1);
       res2 = eval(i + 1, q);
       result = (res1 == res2) ? 1 : 0;
+      break;
+    case TK_GT:
+      res1 = eval(p, i - 1);
+      res2 = eval(i + 1, q);
+      result = (res1 > res2) ? 1 : 0;
+      break;
+    case TK_LT:
+      res1 = eval(p, i - 1);
+      res2 = eval(i + 1, q);
+      result = (res1 < res2) ? 1 : 0;
+      break;
+    case TK_LE:
+      res1 = eval(p, i - 1);
+      res2 = eval(i + 1, q);
+      result = (res1 <= res2) ? 1 : 0;
+      break;
+    case TK_GE:
+      res1 = eval(p, i - 1);
+      res2 = eval(i + 1, q);
+      result = (res1 >= res2) ? 1 : 0;
       break;
     case '*':
       res1 = eval(p, i - 1);
@@ -416,6 +449,10 @@ word_t expr(char *e, bool *success)
     if (tokens[i].type == '*' && (i == 0 || (tokens[i - 1].type != TK_HEX && tokens[i - 1].type != TK_DEC && tokens[i - 1].type != TK_REG && tokens[i - 1].type != TK_RP)))
     {
       tokens[i].type = TK_DEREF;
+    }
+    if (tokens[i].type == '-' && (i == 0 || (tokens[i - 1].type != TK_HEX && tokens[i - 1].type != TK_DEC && tokens[i - 1].type != TK_REG && tokens[i - 1].type != TK_RP)))
+    {
+      tokens[i].type = TK_REV;
     }
   }
 
