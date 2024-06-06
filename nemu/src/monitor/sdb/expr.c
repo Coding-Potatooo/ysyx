@@ -56,11 +56,8 @@ static struct rule
   int token_type;
 } rules[] = {
 
-    /* TODO: Add more rules.
-     * Pay attention to the precedence level of different rules.
-     */
-
     /* Priority decreasing from top to bottom.
+     * Pay attention to the precedence level of different rules.
      */
     {" +", TK_NOTYPE}, // spaces
 
@@ -467,5 +464,6 @@ word_t expr(char *e, bool *success)
   }
 
   word_t val = eval(0, nr_token - 1);
+  *success = true;
   return val;
 }

@@ -18,6 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include "watchpoint.h"
 
 #include <memory/vaddr.h>
 
@@ -85,7 +86,7 @@ static int cmd_info(char *args)
   }
   else if (strcmp(args, "w") == 0)
   {
-    // printf("here is info w!!!\n");
+    watchpoints_display();
   }
   else
   {
@@ -116,21 +117,22 @@ static int cmd_p(char *args)
 {
   bool success = false;
   word_t res = expr(args, &success);
+  assert(success);
   printf("%u\n", res);
   return 0;
 }
 
 static int cmd_w(char *args)
 {
-  printf("This is cmd_w\n");
-  printf("args:%s\n", args);
+  new_wp(args);
   return 0;
 }
 
+// delete watchpoints
 static int cmd_d(char *args)
 {
-  printf("This is cmd_d\n");
-  printf("args:%s\n", args);
+  int n = atoi(args);
+  delete_wp(n);
   return 0;
 }
 
@@ -143,7 +145,7 @@ static struct
     {"help", "Display information about all supported commands", cmd_help},
     {"c", "Continue the execution of the program", cmd_c},
     {"q", "Exit NEMU", cmd_q},
-    /* TODO: Add more commands */
+
     {"si", "Let the program step through N instructions and then pause execution,If N is not given, the default value is 1", cmd_si},
     {"info", "Print information specified by subcommand", cmd_info},
     {"x", "Evaluate expression, say V, then print the next N bytes starting from V", cmd_x},
