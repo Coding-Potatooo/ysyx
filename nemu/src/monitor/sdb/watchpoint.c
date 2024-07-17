@@ -34,7 +34,6 @@ void init_wp_pool()
   free_ = (WP *)malloc(sizeof(WP));
   sprintf(free_->expr_str, "%s", "VIRTUAL HEAD of free nodes");
   free_->next = wp_pool;
-  printf("initialized wp_pool finished\n");
 }
 
 WP *new_wp(char *expr_str)

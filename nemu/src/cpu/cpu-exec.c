@@ -53,7 +53,10 @@ static void exec_once(Decode *s, vaddr_t pc)
 {
   s->pc = pc;
   s->snpc = pc;
-  isa_exec_once(s);
+  isa_exec_once(s); 
+  /* In nemu, when the instruction is executed, pc is pointed to the instruction executing. after the instruction executing is complete, pc is updated.
+    TODO:What about real circuits?...what's the behavior of sequence circuits???
+  */
   cpu.pc = s->dnpc;
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;

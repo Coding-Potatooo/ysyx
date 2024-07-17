@@ -32,6 +32,12 @@ void isa_reg_display()
 }
 
 word_t isa_reg_str2val(const char *s, bool *success)
+/*
+ input: s is the regname (s must start with $)
+        success is set true if functioning normally.
+ return: reg value
+*/
+
 {
   int reg_cnt = ARRLEN(regs);
   for (int i = 1; i < reg_cnt; i++)

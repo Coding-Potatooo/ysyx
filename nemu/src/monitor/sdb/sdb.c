@@ -122,6 +122,15 @@ static int cmd_p(char *args)
   return 0;
 }
 
+static int cmd_px(char *args)
+{
+  bool success = false;
+  word_t res = expr(args, &success);
+  assert(success);
+  printf("0x%x\n", res);
+  return 0;
+}
+
 static int cmd_w(char *args)
 {
   new_wp(args);
@@ -146,10 +155,11 @@ static struct
     {"c", "Continue the execution of the program", cmd_c},
     {"q", "Exit NEMU", cmd_q},
 
-    {"si", "Let the program step through N instructions and then pause execution,If N is not given, the default value is 1", cmd_si},
+    {"si", "Let the program step through N instructions and then pause execution. If N is not given, the default value is 1", cmd_si},
     {"info", "Print information specified by subcommand", cmd_info},
-    {"x", "Evaluate expression, say V, then print the next N bytes starting from V", cmd_x},
-    {"p", "Evaluate expression", cmd_p},
+    {"x", "Print memory: evaluate expression, say V, then print the next N bytes starting from V", cmd_x},
+    {"p", "Evaluate expression in decimal", cmd_p},
+    {"px", "Evaluate expression in heximal", cmd_px},
     {"w", "Set wacth point", cmd_w},
     {"d", "Delete break point", cmd_d},
 };
@@ -228,6 +238,7 @@ void sdb_mainloop()
     {
       if (strcmp(cmd, cmd_table[i].name) == 0)
       {
+        // function call.
         if (cmd_table[i].handler(args) < 0)
         {
           return;

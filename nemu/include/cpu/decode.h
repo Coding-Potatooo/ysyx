@@ -18,6 +18,17 @@
 
 #include <isa.h>
 
+/*
+在程序分析领域中, 静态指令是指程序代码中的指令, 动态指令是指程序运行过程中的指令
+100: jmp 102
+101: add
+102: xor
+jmp指令的下一条静态指令是add指令, 而下一条动态指令则是xor指令.
+有了静态指令和动态指令这两个概念之后, 我们就可以说明snpc和dnpc的区别了: 
+snpc是下一条静态指令, 而dnpc是下一条动态指令. 对于顺序执行的指令, 它们的snpc和dnpc是一样的; 
+但对于跳转指令, snpc和dnpc就会有所不同, dnpc应该指向跳转目标的指令. 
+显然, 我们应该使用s->dnpc来更新PC, 并且在指令执行的过程中正确地维护s->dnpc.
+*/
 typedef struct Decode {
   vaddr_t pc;
   vaddr_t snpc; // static next pc
@@ -92,6 +103,9 @@ finish:
   pattern_decode(pattern, STRLEN(pattern), &key, &mask, &shift); \
   if ((((uint64_t)INSTPAT_INST(s) >> shift) & mask) == key) { \
     INSTPAT_MATCH(s, ##__VA_ARGS__); \
+    /*##__VA_ARGS__ is similar to __VA_ARGS__, the only differnce is that when __VA_ARGS__ is empty, no comma, is generated.
+    https://blog.csdn.net/q2519008/article/details/80934815
+    */ \
     goto *(__instpat_end); \
   } \
 } while (0)
