@@ -164,11 +164,18 @@ static bool make_token(char *e)
           token.type = TK_DEC;
           char regname[4] = {0};
           memcpy(regname, substr_start, substr_len);
-          word_t reg_val = isa_reg_str2val(regname, &success);
-          if (!success)
+          word_t reg_val = 0;
+          if (strcmp(regname, "$pc") == 0 || strcmp(regname, "$PC") == 0)
           {
-            assert(0);
+            reg_val = cpu.pc;
           }
+          else
+          {
+            reg_val = isa_reg_str2val(regname, &success);
+            if (!success)
+              assert(0);
+          }
+
           sprintf(token.str, "%u", reg_val);
           tokens[nr_token++] = token;
           break;
@@ -177,7 +184,7 @@ static bool make_token(char *e)
           // convert heximal to decimal
           char hex_str[16 + 1] = {0};
           char dec_str[20 + 1] = {0};
-          memcpy(hex_str, substr_start, substr_len + 2); //+2 to omit the 0x or 0X
+          memcpy(hex_str, substr_start + 2, substr_len -2); //+2 to omit the 0x or 0X
           word_t val = 0;
           sscanf(hex_str, "%x", &val);
           sprintf(dec_str, "%d", val);
