@@ -49,10 +49,10 @@ WP *new_wp(char *expr_str)
 
     wp_new = head->next;
     bool success = false;
-    printf("%s\n", expr_str);
     wp_new->old_val = expr(expr_str, &success);
     assert(success);
     snprintf(wp_new->expr_str, sizeof(wp_new->expr_str), "%s", expr_str);
+    printf("New wacthpoint[%d]: %s\n", wp_new->NO, expr_str);
   }
   else // return NULL
   {
@@ -109,7 +109,7 @@ bool watchpoints_check()
     assert(success);
     if (new_val != loc->next->old_val)
     {
-      printf("Watchpoint[%d] {%s} changed from [%u] to [%u]\n", loc->next->NO, loc->next->expr_str, loc->next->old_val, new_val);
+      printf("Watchpoint[%d] {%s} changed from [%u] [0x%x] to [%u] [0x%x]\n", loc->next->NO, loc->next->expr_str, loc->next->old_val, loc->next->old_val, new_val, new_val);
       loc->next->old_val = new_val;
       change_flag = true;
       nemu_state.state = NEMU_STOP;
