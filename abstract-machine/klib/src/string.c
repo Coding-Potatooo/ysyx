@@ -164,7 +164,7 @@ RETURN VALUE
       *((char *)dst + i) = *((char *)src + i);
     }
   }
-  else
+  else if (dst > src)
   {
     for (int i = n - 1; i >= 0; i--)
     {
