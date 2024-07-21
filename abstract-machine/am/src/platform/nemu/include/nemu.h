@@ -6,6 +6,14 @@
 #include ISA_H // the macro `ISA_H` is defined in CFLAGS
                // it will be expanded as "x86/x86.h", "mips/mips32.h", ...
 
+/*
+https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html 
+asm: asm是GCC提供的一个扩展，用于将汇编代码嵌入到C代码中。
+The typical use of extended asm statements is to manipulate input values to produce output values. However, your asm statements may also produce side effects. If so, you may need to use the volatile qualifier to disable certain optimizations. See Volatile.
+
+volatile: A volatile specifier is a hint to a compiler that an object may change its value in ways not specified by the language so that aggressive optimizations must be avoided.
+  volatile告诉编译器不要优化这段汇编代码。
+*/
 #if defined(__ISA_X86__)
 # define nemu_trap(code) asm volatile ("int3" : :"a"(code))
 #elif defined(__ISA_MIPS32__)

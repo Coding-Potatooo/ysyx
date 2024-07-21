@@ -14,7 +14,12 @@ void putch(char ch) {
   outb(SERIAL_PORT, ch);
 }
 
-void halt(int code) {
+void halt(int code) { 
+
+  /*
+  the instruction ebreak supported by nemu(nemu as hardware) calls NEMUTRAP
+  #define NEMUTRAP(thispc, code) set_nemu_state(NEMU_END, thispc, code)
+  */
   nemu_trap(code);
 
   // should not reach here
