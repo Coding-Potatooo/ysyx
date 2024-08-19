@@ -17,8 +17,8 @@
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include "sdb.h"
-#include "watchpoint.h"
+#include <sdb/sdb.h>
+#include <sdb/watchpoint.h>
 
 #include <memory/vaddr.h>
 
@@ -50,14 +50,14 @@ static char *rl_gets()
 
 static int cmd_c(char *args)
 {
-  cpu_exec(-1);
+  cpu_exec(-1); // -1 is interpreted as unsigned int, the max unsigned int.
   return 0;
 }
 
 static int cmd_q(char *args)
 {
   // set_nemu_state(NEMU_QUIT, 0, 0);
-  nemu_state.state = NEMU_QUIT;
+  nemu_state.state = NEMU_QUIT; // in this way,  perseve 
   return -1;
 }
 
@@ -154,7 +154,6 @@ static struct
     {"help", "Display information about all supported commands", cmd_help},
     {"c", "Continue the execution of the program", cmd_c},
     {"q", "Exit NEMU", cmd_q},
-
     {"si", "Let the program step through N instructions and then pause execution. If N is not given, the default value is 1", cmd_si},
     {"info", "Print information specified by subcommand", cmd_info},
     {"x", "Print memory: evaluate expression, say V, then print the next N bytes starting from V", cmd_x},

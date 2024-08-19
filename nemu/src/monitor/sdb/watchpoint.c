@@ -13,8 +13,8 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
-#include "sdb.h"
-#include "watchpoint.h"
+#include <sdb/sdb.h>
+#include <sdb/watchpoint.h>
 
 static WP wp_pool[NR_WP] = {};
 static WP *head = NULL, *free_ = NULL;

@@ -19,7 +19,7 @@ void sdb_mainloop();
 
 void engine_start() {
 #ifdef CONFIG_TARGET_AM
-  cpu_exec(-1);
+  cpu_exec(-1); // -1 is interpreted as unsigned int, the max unsigned int.
 #else
   /* Receive commands from user. */
   sdb_mainloop();

@@ -18,6 +18,7 @@
 
 void init_rand();
 void init_log(const char *log_file);
+void init_elf(const char* elf_fpath);
 void init_mem();
 void init_difftest(char *ref_so_file, long img_size, int port);
 void init_device();
@@ -42,9 +43,18 @@ static void welcome() {
 void sdb_set_batch_mode();
 
 static char *log_file = NULL;
+static char *elf_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
+
+#ifdef CONFIG_FTRACE
+  typedef struct _function_name_address{
+    char * fname;  //point to address in elf file.
+    word_t faddr;  
+  } func_name_addr;
+  func_name_addr fna[1024]; //TODO: maybe larger array?
+#endif
 
 static long load_img() {
   if (img_file == NULL) {
@@ -68,12 +78,18 @@ static long load_img() {
   return size;
 }
 
+
+/*
+man getopt_long
+flag  specifies how results are returned for a long option.  If flag is NULL, then getopt_long() returns val. Otherwise, getopt_long() returns 0, and flag points to a variable which is set to val if the option is found, but left unchanged if the option is not found.
+*/
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
     {"batch"    , no_argument      , NULL, 'b'},
     {"log"      , required_argument, NULL, 'l'},
     {"diff"     , required_argument, NULL, 'd'},
     {"port"     , required_argument, NULL, 'p'},
+    {"elf"      , required_argument, NULL, 'e'},
     {"help"     , no_argument      , NULL, 'h'},
     {0          , 0                , NULL,  0 },
   };
@@ -84,13 +100,19 @@ static int parse_args(int argc, char *argv[]) {
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
       case 'd': diff_so_file = optarg; break;
-      case 1: img_file = optarg; return 0;
+      case 'e': elf_file = optarg; break;
+      case 1: img_file = optarg; return 0; 
+      /*
+      If the first character of optstring is '-', then each nonoption argv-element is handled as if it were the argument of an option with character code 1.  
+      (This is used by programs that were written to expect options and other argv-elements in any order and that care about the ordering of the two.) 
+      */
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
         printf("\t-b,--batch              run with batch mode\n");
         printf("\t-l,--log=FILE           output log to FILE\n");
         printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
         printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
+        printf("\t-e,--elf=ELF            run ftrace of ELF\n");
         printf("\n");
         exit(0);
     }
@@ -109,6 +131,15 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Open the log file. */
   init_log(log_file);
+
+#ifdef CONFIG_FTRACE
+  /* Read the elf file
+  TO.DO: maybe there is a better place to read elf?, but the better place must access / be accessed by parse_args in monitor.c
+  RATIONALE: everytime an instruction is executed, FTRACE should be working, so elf must be ready before cpu-exec.
+  put init_elf here is rational.
+  */
+  init_elf(elf_file);
+#endif
 
   /* Initialize memory. */
   init_mem();

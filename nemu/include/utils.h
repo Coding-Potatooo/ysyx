@@ -67,10 +67,63 @@ uint64_t get_time();
   } while (0) \
 )
 
+#define ilog_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+  do { \
+    extern FILE* log_ifp; \
+    extern bool log_enable(); \
+    if (log_enable()) { \
+      fprintf(log_ifp, __VA_ARGS__); \
+      fflush(log_ifp); \
+    } \
+  } while (0) \
+)
+
+#define mlog_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+  do { \
+    extern FILE* log_mfp; \
+    extern bool log_enable(); \
+    if (log_enable()) { \
+      fprintf(log_mfp, __VA_ARGS__); \
+      fflush(log_mfp); \
+    } \
+  } while (0) \
+)
+
+#define flog_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+  do { \
+    extern FILE* log_ffp; \
+    extern bool log_enable(); \
+    if (log_enable()) { \
+      fprintf(log_ffp, __VA_ARGS__); \
+      fflush(log_ffp); \
+    } \
+  } while (0) \
+)
+
+
 #define _Log(...) \
   do { \
     printf(__VA_ARGS__); \
     log_write(__VA_ARGS__); \
+  } while (0)
+
+
+  #define _ILog(...) \
+  do { \
+    printf(__VA_ARGS__); \
+    ilog_write(__VA_ARGS__); \
+  } while (0)
+
+  #define _MLog(...) \
+  do { \
+    printf(__VA_ARGS__); \
+    mlog_write(__VA_ARGS__); \
+  } while (0)
+
+  #define _FLog(...) \
+  do { \
+    printf(__VA_ARGS__); \
+    flog_write(__VA_ARGS__); \
   } while (0)
 
 

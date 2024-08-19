@@ -13,39 +13,11 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
+#ifndef __SDB_H__
+#define __SDB_H__
+
 #include <common.h>
-#include <sdb/sdb.h>
 
+word_t expr(char *e, bool *success);
 
-void init_monitor(int, char *[]);
-void am_init_monitor();
-void engine_start();
-int is_exit_status_bad();
-void test_expr();
-
-int main(int argc, char *argv[])
-{
-  /* Initialize the monitor. */
-
-for (int i = 0; i<argc;i++){
-  printf("%s\n",argv[i]);
-
-}
-#ifdef CONFIG_TARGET_AM
-  am_init_monitor();
-#else
-  init_monitor(argc, argv);
 #endif
-
-// PA1: to test the function of evaluate expression.
-// #define TEST_EXPR
-#ifdef TEST_EXPR
-  test_expr();
-#endif
-
-  /* Start engine. */
-  engine_start();
-
-  return is_exit_status_bad();
-}
-

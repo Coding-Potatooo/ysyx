@@ -17,6 +17,7 @@
 #include <cpu/cpu.h>
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
+#include <trace.h>
 
 #define R(i) gpr(i)
 #define Mr vaddr_read
@@ -140,7 +141,6 @@ static int decode_exec(Decode *s)
 // #define DEBUG_DDDD
 #ifdef DEBUG_DDDD
   printf("DEBUG_DDDD:instruction[%08x]  @pc[%08x]\n", (s)->isa.inst.val, s->pc);
-
 #endif
 
   int rd = 0;
@@ -167,18 +167,23 @@ static int decode_exec(Decode *s)
   INSTPAT("??????? ????? ????? ??? ????? 01101 11", lui, U, R(rd) = imm);           /*load upper immediate*/
 
   /*
-  Plain unconditional jumps (assembler pseudoinstruction J) are encoded as a JAL with rd=x0.
+  JAL stores the address of the instruction following the jump ('pc'+4) into register rd.
+
+  Plain unconditional jumps (assembler pseudoinstruction J) are encoded as a JAL with rd=x0 (x0 is the first gpr $0).
   Note that $zero is reset to zero at the end of decode_exec()... so J can be pattern matched and implemented by JAL.
   */
-  INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal, J, s->dnpc = s->pc + imm; R(rd) = s->pc + 4;); /*jump and link*/
+  INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal, J, s->dnpc = s->pc + imm; R(rd) = s->pc + 4; ftrace_call(s->pc, s->dnpc)); /*jump and link*/
 
   /*
   ret is a pseudoinstruction, which is expanded to jalr x0, 0(x1)
   according to JAL, the standard software calling convention uses 'x1' as the return address register.
   */
+  INSTPAT("0000000 00000 00001 000 00000 11001 11", ret, I, s->dnpc = src1 - (src1 & 1) /*set the least-significant bit of the result to zero*/; ftrace_ret(s->pc, s->dnpc));
+
   INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr /*jump and link register*/, I,
           s->dnpc = (src1 + imm) & (((1ull << (32)) - 1) - 1); /*#define BITMASK(bits) ((1ull << (bits)) - 1); set the least-significant bit of the result to zero*/
-          R(rd) = s->pc + 4;);
+          R(rd) = s->pc + 4;
+          ftrace_call(s->pc, s->dnpc));
 
   /*
    All branch instructions use the B-type instruction format.

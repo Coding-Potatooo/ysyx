@@ -474,3 +474,45 @@ word_t expr(char *e, bool *success)
   *success = true;
   return val;
 }
+
+void test_expr()
+{
+  printf("dddd: I am testing expr!\n");
+  char *nemu_home = getenv("NEMU_HOME");
+  char input_path[1024];
+  sprintf(input_path, "%s%s", nemu_home, "/tools/gen-expr/build/input");
+  // printf("%s\n", input_path);
+  FILE *file = fopen(input_path, "r");
+  assert(file);
+
+  char input_str[65536] = {0};
+  while (fgets(input_str, 65536, file))
+  {
+    // printf("%s\n", input_str);
+    // int golden_result = 0;
+
+    // remove \n at the end of the line, other wise \n will not be recongnized by make_tokens()
+    int input_str_len = strlen(input_str);
+    if (input_str_len > 0 && input_str[input_str_len - 1] == '\n')
+    {
+      input_str[input_str_len - 1] = 0;
+    }
+    char *delimiter_pos = strchr(input_str, ' ');
+    assert(delimiter_pos);
+    *delimiter_pos = 0;
+    char *golden_result_str = input_str;
+    char *expr_str = delimiter_pos + 1;
+
+    bool success = false;
+    word_t eval_result = expr(expr_str, &success);
+    word_t golden_result = atoi(golden_result_str);
+    if (golden_result != eval_result)
+    {
+      printf("BUG FOUND!!!\n");
+      printf("\t[golden_result_str]:%s\n\t[expr_str]:%s\n\teval_result:%d\n", golden_result_str, expr_str, eval_result);
+      Log("\t[golden_result_str]:%s\n\t[expr_str]:%s\n\teval_result:%d\n", golden_result_str, expr_str, eval_result);
+    }
+  }
+
+  printf("expr test " ANSI_FMT("PASS!\n",ANSI_FG_GREEN));
+}

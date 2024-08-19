@@ -17,30 +17,38 @@
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
 #include <locale.h>
-#include "../../monitor/sdb/watchpoint.h"
+#include <trace.h>
+#include <sdb/watchpoint.h>
+
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
- * This is useful when you use the `si' command.
+ * This is useful when you use the `si' command. (cmd c set n to -1(uint -1 is the max len, this will disable the print to stdout))
  * You can modify this value as you want.
  */
 #define MAX_INST_TO_PRINT 10
+static bool g_print_step = false;
 
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0; // total guest instructions
 static uint64_t g_timer = 0;  // unit: us
-static bool g_print_step = false;
 
 void device_update();
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc)
 {
-#ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND)
-  {
-    log_write("%s\n", _this->logbuf);
-  }
+#ifdef CONFIG_ITRACE
+  store_inst2logbuf(_this);
 #endif
-  if (g_print_step)
+
+#ifdef CONFIG_ITRACE_IRINGBUF
+  irb_add(_this->logbuf);
+
+#else // enabling IRINGBUF will disable the normal functioning of ITRACE(not every instruction will be logged, only the most recent CONFIG_IRINGBUF_SIZE will be logged.)
+  // printf("%s\n",_this->logbuf);
+  log_write("%s\n", _this->logbuf);
+#endif
+
+  if (g_print_step) // g_print_step is true only when using si CNT and CNT is less than MAX_INST_TO_PRINT.
   {
     IFDEF(CONFIG_ITRACE, puts(_this->logbuf));
   }
@@ -53,37 +61,42 @@ static void exec_once(Decode *s, vaddr_t pc)
 {
   s->pc = pc;
   s->snpc = pc;
-  isa_exec_once(s); 
-  /* In nemu, when the instruction is executed, pc is pointed to the instruction executing. after the instruction executing is complete, pc is updated.
-    TODO:What about real circuits?...what's the behavior of sequence circuits???
+  isa_exec_once(s);
+  /* In nemu, when the instruction is executed, pc is pointed to the instruction executing (otherwise, how to fecth and decode inst without the guidance of PC?).
+    After the instruction execution is complete, pc is updated.
+    TODO: What about real circuits?...what's the behavior of sequence circuits???
   */
-  cpu.pc = s->dnpc;
-#ifdef CONFIG_ITRACE
-  char *p = s->logbuf;
-  p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
-  int ilen = s->snpc - s->pc;
-  int i;
-  uint8_t *inst = (uint8_t *)&s->isa.inst.val;
-  for (i = ilen - 1; i >= 0; i--)
-  {
-    p += snprintf(p, 4, " %02x", inst[i]);
-  }
-  int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
-  int space_len = ilen_max - ilen;
-  if (space_len < 0)
-    space_len = 0;
-  space_len = space_len * 3 + 1;
-  memset(p, ' ', space_len);
-  p += space_len;
+  cpu.pc = s->dnpc; // update pc.
 
-#ifndef CONFIG_ISA_loongarch32r
-  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-  disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
-              MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
-#else
-  p[0] = '\0'; // the upstream llvm does not support loongarch32r
-#endif
-#endif
+  /*
+   // refactored to trace_and_difftest.
+    // #ifdef CONFIG_ITRACE // store instruction log information to s->logbuf
+    //   char *p = s->logbuf;
+    //   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);  // 0x80000000:
+    //   int ilen = s->snpc - s->pc; // ilen means for instruction length
+    //   // to print every byte of inst. from high address to low address so that the output is human read friendly...(note that inst stored in memeory in little endian fashion.)
+    //   int i;
+    //   uint8_t *inst = (uint8_t *)&s->isa.inst.val;
+    //   for (i = ilen - 1; i >= 0; i--)
+    //   {
+    //     p += snprintf(p, 4, " %02x", inst[i]);
+    //   }
+    //   int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
+    //   int space_len = ilen_max - ilen;
+    //   if (space_len < 0)
+    //     space_len = 0;
+    //   space_len = space_len * 3 + 1;
+    //   memset(p, ' ', space_len);
+    //   p += space_len;
+    // #ifndef CONFIG_ISA_loongarch32r
+    //   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+    //   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
+    //               MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
+    // #else
+    //   p[0] = '\0'; // the upstream llvm does not support loongarch32r
+    // #endif
+    // #endif
+  */
 }
 
 static void execute(uint64_t n)
@@ -118,7 +131,11 @@ void assert_fail_msg()
   statistic();
 }
 
-/* Simulate how the CPU works. */
+/*
+Simulate how the CPU works.
+Input:
+  uinit64_t n: how many instuction to be executed.
+*/
 void cpu_exec(uint64_t n)
 {
   g_print_step = (n < MAX_INST_TO_PRINT);

@@ -25,7 +25,8 @@
 102: xor
 jmp指令的下一条静态指令是add指令, 而下一条动态指令则是xor指令.
 有了静态指令和动态指令这两个概念之后, 我们就可以说明snpc和dnpc的区别了: 
-snpc是下一条静态指令, 而dnpc是下一条动态指令. 对于顺序执行的指令, 它们的snpc和dnpc是一样的; 
+snpc是下一条静态指令, 而dnpc是下一条动态指令. 
+对于顺序执行的指令, 它们的snpc和dnpc是一样的; 
 但对于跳转指令, snpc和dnpc就会有所不同, dnpc应该指向跳转目标的指令. 
 显然, 我们应该使用s->dnpc来更新PC, 并且在指令执行的过程中正确地维护s->dnpc.
 */
@@ -34,7 +35,7 @@ typedef struct Decode {
   vaddr_t snpc; // static next pc
   vaddr_t dnpc; // dynamic next pc
   ISADecodeInfo isa;
-  IFDEF(CONFIG_ITRACE, char logbuf[128]);
+  IFDEF(CONFIG_ITRACE, char logbuf[128]); // logbuf stores itrace information...
 } Decode;
 
 // --- pattern matching mechanism ---

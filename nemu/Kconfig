@@ -17,7 +17,7 @@ config ISA
   string
   default "x86" if ISA_x86
   default "mips32" if ISA_mips32
-  default "riscv32" if ISA_riscv && !RV64
+  default "riscv32" if ISA_riscv && !RV64 #RV64 is defined in src/isa/riscv32/Kconfig and src/isa/riscv64/Kconfig
   default "riscv64" if ISA_riscv &&  RV64
   default "loongarch32r" if ISA_loongarch32r
   default "none"
@@ -143,14 +143,34 @@ config TRACE_END
 
 config ITRACE
   depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
-  bool "Enable instruction tracer"
+  bool "Enable Instruction tracer"
   default y
 
-config ITRACE_COND
-  depends on ITRACE
-  string "Only trace instructions when the condition is true"
-  default "true"
+# config ITRACE_COND
+#   depends on ITRACE
+#   string "Only trace instructions when the condition is true"
+#   default "true"
 
+config ITRACE_IRINGBUF
+  depends on ITRACE
+  bool "Only store IRINGBUF_SIZE instruction trace. This will disable the normal functioning of ITRACE"
+  default N
+
+config IRINGBUF_SIZE
+  depends on ITRACE_IRINGBUF
+  int "size of instruction ring buffer"
+  default 0
+
+config MTRACE
+  depends on TRACE
+  bool "Enable Memory access tracer"
+  default n
+
+config FTRACE
+  depends on TRACE
+  bool "Enable Function tracer"
+  default n
+  
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
