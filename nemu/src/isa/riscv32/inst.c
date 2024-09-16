@@ -177,6 +177,8 @@ static int decode_exec(Decode *s)
   /*
   ret is a pseudoinstruction, which is expanded to jalr x0, 0(x1)
   according to JAL, the standard software calling convention uses 'x1' as the return address register.
+
+  the reason why sepreate ret from jalr is to facilitate the implementation of ftrace of ret.
   */
   INSTPAT("0000000 00000 00001 000 00000 11001 11", ret, I, s->dnpc = src1 - (src1 & 1) /*set the least-significant bit of the result to zero*/; ftrace_ret(s->pc, s->dnpc));
 
@@ -184,7 +186,6 @@ static int decode_exec(Decode *s)
           s->dnpc = (src1 + imm) & (((1ull << (32)) - 1) - 1); /*#define BITMASK(bits) ((1ull << (bits)) - 1); set the least-significant bit of the result to zero*/
           R(rd) = s->pc + 4;
           ftrace_call(s->pc, s->dnpc));
-
   /*
    All branch instructions use the B-type instruction format.
    The 12-bit B-immediate encodes signed offsets in multiples of 2 bytes. The offset is sign-extended and added to the address of the branch

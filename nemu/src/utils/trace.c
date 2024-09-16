@@ -84,6 +84,7 @@ uint32_t call_stack_top = 0;
 
 void ftrace_call(word_t pc, word_t dnpc)
 {
+#ifdef CONFIG_FTRACE
     int func_idx = dnpc2func_idx(dnpc);
     if (func_idx >= 0) // this is a call instuction!
     {
@@ -96,10 +97,12 @@ void ftrace_call(word_t pc, word_t dnpc)
         }
         flog_write("call [%s@0x%08x]\n", callee.name, callee.begin_addr);
     }
+#endif
 }
 
 void ftrace_ret(word_t pc, word_t dnpc)
 {
+#ifdef CONFIG_FTRACE
     Assert(call_stack_top > 0, "Wrong: RET before CALL");
     func_info env = call_stack[--call_stack_top];
 
@@ -109,4 +112,5 @@ void ftrace_ret(word_t pc, word_t dnpc)
         flog_write("\t");
     }
     flog_write("ret [%s]\n", env.name);
+#endif
 }

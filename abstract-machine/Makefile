@@ -40,20 +40,20 @@ ifeq ($(flavor SRCS), undefined)
   $(error Nothing to build)
 endif
 
-### Checks end here
+### Checks end here (Match ###Override checks when `make clean/clean-all/html`)
 endif
 
 ## 2. General Compilation Targets
 
 ### Create the destination directory (`build/$ARCH`)
-WORK_DIR  = $(shell pwd)
+WORK_DIR  = $(shell pwd)# pwd depends on where the make command is executed instead of where the Makefile is.
 DST_DIR   = $(WORK_DIR)/build/$(ARCH)
 $(shell mkdir -p $(DST_DIR))
 
 ### Compilation targets (a binary image or archive)
-IMAGE_REL = build/$(NAME)-$(ARCH)
+IMAGE_REL = build/$(NAME)-$(ARCH)#build/add-riscv32-nemu 
 IMAGE     = $(abspath $(IMAGE_REL))
-ARCHIVE   = $(WORK_DIR)/build/$(NAME)-$(ARCH).a
+ARCHIVE   = $(WORK_DIR)/build/$(NAME)-$(ARCH).a#abstract-machine/am/build/am-riscv32-nemu.a
 
 ### Collect the files to be linked: object files (`.o`) and libraries (`.a`)
 OBJS      = $(addprefix $(DST_DIR)/, $(addsuffix .o, $(basename $(SRCS))))
@@ -107,6 +107,7 @@ endif
 ### Rule (compile): a single `.c` -> `.o` (gcc)
 $(DST_DIR)/%.o: %.c
 	@mkdir -p $(dir $@) && echo + CC $<
+	@echo ${OBJS}
 	@$(CC) -std=gnu11 $(CFLAGS) -c -o $@ $(realpath $<)
 
 ### Rule (compile): a single `.cc` -> `.o` (g++)
@@ -131,7 +132,18 @@ $(LIBS): %:
 ### Rule (link): objects (`*.o`) and libraries (`*.a`) -> `IMAGE.elf`, the final ELF binary to be packed into image (ld)
 $(IMAGE).elf: $(OBJS) $(LIBS)
 	@echo + LD "->" $(IMAGE_REL).elf
+#@echo ${OBJS}
+#@echo ${LIBS}
+#@echo ${LINKAGE}
 	@$(LD) $(LDFLAGS) -o $(IMAGE).elf --start-group $(LINKAGE) --end-group
+#--start-group archives --end-group
+# The archives should be a list of archive files. 
+# They may be either explicit file names, or `-l' options. 
+# The specified archives are searched repeatedly until no new undefined references are created. 
+# Normally, an archive is searched only once in the order that it is specified on the command line. 
+# If a symbol in that archive is needed to resolve an undefined symbol referred to by an object in an archive that appears later on the command line, the linker would not be able to resolve that reference. 
+# By grouping the archives, they all be searched repeatedly until all possible references are resolved. 
+# Using this option has a significant performance cost. It is best to use it only when there are unavoidable circular references between two or more archives.
 
 ### Rule (archive): objects (`*.o`) -> `ARCHIVE.a` (ar)
 $(ARCHIVE): $(OBJS)

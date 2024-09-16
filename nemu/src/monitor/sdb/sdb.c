@@ -57,7 +57,7 @@ static int cmd_c(char *args)
 static int cmd_q(char *args)
 {
   // set_nemu_state(NEMU_QUIT, 0, 0);
-  nemu_state.state = NEMU_QUIT; // in this way,  perseve 
+  nemu_state.state = NEMU_QUIT; // in this way, halt_pc and halt_ret is perseved 
   return -1;
 }
 
@@ -173,7 +173,10 @@ static int cmd_help(char *args)
 
   if (arg == NULL)
   {
-    /* no argument given */
+    /* no argument given, e.g.
+      (nemu) help
+      show all description 
+    */
     for (i = 0; i < NR_CMD; i++)
     {
       printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
@@ -181,6 +184,9 @@ static int cmd_help(char *args)
   }
   else
   {
+    /* (nemu) help <arg>
+      show description of <arg>
+    */
     for (i = 0; i < NR_CMD; i++)
     {
       if (strcmp(arg, cmd_table[i].name) == 0)

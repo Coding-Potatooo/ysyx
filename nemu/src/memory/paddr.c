@@ -30,14 +30,18 @@ paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 static word_t pmem_read(paddr_t addr, int len)
 {
   word_t ret = host_read(guest_to_host(addr), len);
+# ifdef CONFIG_MTRACE
   mlog_write(" PMem_Read : Read  [0x%0x8] from addr <0x%08x> \t by inst@pc<0x%08x>\n", ret, addr, cpu.pc);
+# endif
   return ret;
 }
 
 static void pmem_write(paddr_t addr, int len, word_t data)
 {
   host_write(guest_to_host(addr), len, data);
+# ifdef CONFIG_MTRACE
   mlog_write("PMem_Write: Write [0x%0x8] to addr   <0x%08x> \t by inst@pc<0x%08x>\n", data, addr, cpu.pc);
+# endif
 }
 
 static void out_of_bound(paddr_t addr)

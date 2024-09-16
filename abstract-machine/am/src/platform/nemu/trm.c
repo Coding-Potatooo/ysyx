@@ -17,6 +17,7 @@ void putch(char ch) {
 void halt(int code) { 
 
   /*
+  NEMUTRAP is DIFFERENT FROM nemu_trap!!!!!!
   the instruction ebreak supported by nemu(nemu as hardware) calls NEMUTRAP
   #define NEMUTRAP(thispc, code) set_nemu_state(NEMU_END, thispc, code)
   */
