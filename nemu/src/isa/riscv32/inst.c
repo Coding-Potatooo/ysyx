@@ -138,11 +138,6 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
 
 static int decode_exec(Decode *s)
 {
-// #define DEBUG_DDDD
-#ifdef DEBUG_DDDD
-  printf("DEBUG_DDDD:instruction[%08x]  @pc[%08x]\n", (s)->isa.inst.val, s->pc);
-#endif
-
   int rd = 0;
   word_t src1 = 0, src2 = 0, imm = 0;
   s->dnpc = s->snpc;
@@ -301,6 +296,6 @@ static int decode_exec(Decode *s)
 
 int isa_exec_once(Decode *s)
 {
-  s->isa.inst.val = inst_fetch(&s->snpc, 4);
+  s->isa.inst.val = inst_fetch(&s->snpc, 4);  //s->snpc point to pc before inst_fetch is called, s->snpc is incremented after inst_fecth and snpc is truly semantically snpc!
   return decode_exec(s);
 }

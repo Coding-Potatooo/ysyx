@@ -37,7 +37,7 @@ void store_inst2logbuf(Decode *s) // store instruction log information to s->log
 {
 #ifdef CONFIG_ITRACE
     char *p = s->logbuf;
-    p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc); // 0x80000000:
+    p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc); //在 C 语言中，相邻的字符串字面量会在编译阶段自动拼接（concatenation）。 0x80000000:
     int ilen = s->snpc - s->pc;                               // ilen means for instruction length
     // to print every byte of inst. from high address to low address so that the output is human read friendly...(note that inst stored in memeory in little endian fashion.)
     int i;

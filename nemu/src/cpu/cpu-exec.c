@@ -64,12 +64,13 @@ static void exec_once(Decode *s, vaddr_t pc)
   isa_exec_once(s);
   /* In nemu, when the instruction is executed, pc is pointed to the instruction executing (otherwise, how to fecth and decode inst without the guidance of PC?).
     After the instruction execution is complete, pc is updated.
-    TODO: What about real circuits?...what's the behavior of sequence circuits???
+    What about real circuits?
   */
   cpu.pc = s->dnpc; // update pc.
 
   /*
-   // refactored to trace_and_difftest.
+    // refactored to trace_and_difftest.ics
+    
     // #ifdef CONFIG_ITRACE // store instruction log information to s->logbuf
     //   char *p = s->logbuf;
     //   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);  // 0x80000000:

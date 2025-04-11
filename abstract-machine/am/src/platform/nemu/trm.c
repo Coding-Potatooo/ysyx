@@ -20,6 +20,8 @@ void halt(int code) {
   NEMUTRAP is DIFFERENT FROM nemu_trap!!!!!!
   the instruction ebreak supported by nemu(nemu as hardware) calls NEMUTRAP
   #define NEMUTRAP(thispc, code) set_nemu_state(NEMU_END, thispc, code)
+
+  However, nemu_trap is linked to programs running on AM.
   */
   nemu_trap(code);
 
