@@ -169,6 +169,6 @@ void init_elf(const char *elf_fpath)
     }
     else
     {
-        Assert(0, "ELF filepath missing!");
+        Assert(0, "ELF filepath missing!\nProvide ELF_PATH in command line when calling make! ");
     }
 }

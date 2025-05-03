@@ -24,8 +24,13 @@ static uint8_t *io_space = NULL;
 static uint8_t *p_space = NULL;
 
 uint8_t* new_space(int size) {
-  uint8_t *p = p_space;
-  // page aligned;
+  //size单位是字节
+  uint8_t *p = p_space; //p_space指向空闲内存的开始
+  /*
+  为了把 size 向上对齐到页大小（PAGE_SIZE）的整数倍。也就是说，new_space是以页为单位来分配的。
+  加 PAGE_SIZE - 1 是为了保证：
+  如果 size 本身已经是页对齐的，就不变；如果不是，就进位到下一个页大小。
+  */ 
   size = (size + (PAGE_SIZE - 1)) & ~PAGE_MASK;
   p_space += size;
   assert(p_space - io_space < IO_SPACE_MAX);
@@ -47,6 +52,11 @@ static void invoke_callback(io_callback_t c, paddr_t offset, int len, bool is_wr
 }
 
 void init_map() {
+  /*根据nemu$ make -B 链接的选项来看，map.c被链接到riscv32-nemu-interpreter，也就是最后malloc是host（Ubuntu）的内存
+    为什么需要这样做呢？
+    串口输出根本没有必要向host memory中写入数据...直接输出到stderr不就好了吗？
+  */ 
+  
   io_space = malloc(IO_SPACE_MAX);
   assert(io_space);
   p_space = io_space;

@@ -45,6 +45,7 @@ void add_mmio_map(const char *name, paddr_t addr, void *space, uint32_t len, io_
     }
   }
 
+  //这里是核心：在maps中新建一个项
   maps[nr_map] = (IOMap){ .name = name, .low = addr, .high = addr + len - 1,
     .space = space, .callback = callback };
   Log("Add mmio map '%s' at [" FMT_PADDR ", " FMT_PADDR "]",

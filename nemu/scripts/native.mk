@@ -26,13 +26,13 @@ $(BINARY):: compile_git
 
 override ARGS ?= --log=$(BUILD_DIR)/nemu-log.txt
 override ARGS += $(ARGS_DIFF)
-ELF_PATH ?=  # ELF_PATH is empty by default. Provide ELF_PATH in command line! 
+override ARGS += -b
+ELF_PATH =# ELF_PATH is empty by default. 
 override ARGS += $(ELF_PATH)
 
 # Command to execute NEMU
 IMG ?=
 NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
-
 run-env: $(BINARY) $(DIFF_REF_SO)
 
 run: run-env
