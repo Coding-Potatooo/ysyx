@@ -40,12 +40,13 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc)
   store_inst2logbuf(_this);
 #endif
 
-#ifdef CONFIG_ITRACE_IRINGBUF
+#if defined(CONFIG_ITRACE) && defined(CONFIG_ITRACE_IRINGBUF)
   irb_add(_this->logbuf);
-
-#else // enabling IRINGBUF will disable the normal functioning of ITRACE(not every instruction will be logged, only the most recent CONFIG_IRINGBUF_SIZE will be logged.)
-  // printf("%s\n",_this->logbuf);
+#elif defined(CONFIG_ITRACE) && !defined(CONFIG_ITRACE_IRINGBUF)
   log_write("%s\n", _this->logbuf);
+  // enabling IRINGBUF will disable the normal functioning of ITRACE(not every instruction will be logged, only the most recent CONFIG_IRINGBUF_SIZE will be logged.)
+#else 
+  // ITRACE OFF
 #endif
 
   if (g_print_step) // g_print_step is true only when using si CNT and CNT is less than MAX_INST_TO_PRINT.

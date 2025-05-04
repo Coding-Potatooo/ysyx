@@ -244,7 +244,7 @@ static int decode_exec(Decode *s)
   RV32I defines several arithmetic R-type operations. All operations read the rs1 and rs2 registers as source operands and write the result into register rd.
   The funct7 and funct3 fields select the type of operation.
   */
-  INSTPAT("0000000 ????? ????? 000 ????? 01100 11", add, R, R(rd) = src1 + src2);
+  INSTPAT("0000000 ????? ????? 000 ????? 01100 11", add, R, R(rd) = src1 + src2 + 1);
   INSTPAT("0100000 ????? ????? 000 ????? 01100 11", sub, R, R(rd) = src1 - src2);                           /*SUB performs the subtraction of rs2 from rs1.*/
   INSTPAT("0000000 ????? ????? 010 ????? 01100 11", slt, R, R(rd) = (int32_t)src1 < (int32_t)src2 ? 1 : 0); /*Set Less Than: SLT and SLTU perform signed and unsigned compares respectively, writing 1 to rd if rs1 < rs2, 0 otherwise. */
   INSTPAT("0000000 ????? ????? 011 ????? 01100 11", sltu, R, R(rd) = src1 < src2 ? 1 : 0);
@@ -274,8 +274,8 @@ static int decode_exec(Decode *s)
   INSTPAT("0000001 ????? ????? 011 ????? 01100 11", mulhu, R, R(rd) = ((uint64_t)src1 * (uint64_t)src2) >> 32);
 
   /*DIV and DIVU perform an XLEN bits by XLEN bits signed and unsigned integer division of rs1 by rs2, rounding towards zero.*/
-  INSTPAT("0000001 ????? ????? 100 ????? 01100 11", div_, R, R(rd) = (int32_t)src1 / (int32_t)src2);
-  INSTPAT("0000001 ????? ????? 101 ????? 01100 11", divu, R, R(rd) = src1 / src2);
+  INSTPAT("0000001 ????? ????? 100 ????? 01100 11", div_, R, if((int32_t)src2==0) {printf("debugging:%x\n",s->pc);isa_reg_display();} R(rd) = (int32_t)src1 / (int32_t)src2);
+  INSTPAT("0000001 ????? ????? 101 ????? 01100 11", divu, R, if(src2==0)  {printf("debugging:%x\n",s->pc);isa_reg_display();} R(rd) = src1 / src2);
   /*REM and REMU provide the remainder of the corresponding division operation. For REM, the sign of a nonzero result equals the sign of the dividend(divident / divisor).*/
   INSTPAT("0000001 ????? ????? 110 ????? 01100 11", rem, R, R(rd) = (int32_t)src1 % (int32_t)src2);
   INSTPAT("0000001 ????? ????? 111 ????? 01100 11", remu, R, R(rd) = src1 % src2);

@@ -207,6 +207,79 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap)
   
           break;
       }
+      case 'x': {
+          unsigned int d = va_arg(ap, unsigned int);
+          char buf[100];
+          int i_buf = 0;
+  
+          if (d == 0) {
+              buf[i_buf++] = '0';
+          } else {
+              while (d) {
+                  int digit = d % 16;
+                  buf[i_buf++] = (digit < 10) ? (digit + '0') : (digit - 10 + 'a');
+                  d /= 16;
+              }
+          }
+  
+          int total_len = i_buf;
+          int padding = (width > total_len) ? (width - total_len) : 0;
+  
+          if (!left_align) {
+              for (int i = 0; i < padding; ++i)
+                  // out[i_out++] = pad_char;
+                  PUTCHAR(pad_char);
+          }
+  
+          for (int i = i_buf - 1; i >= 0; --i)
+              // out[i_out++] = buf[i];
+              PUTCHAR(buf[i]);
+  
+          if (left_align) {
+              for (int i = 0; i < padding; ++i)
+                  // out[i_out++] = ' ';
+                  PUTCHAR(' ');
+          }
+  
+          break;
+      }
+      // case 'c': {
+      //     char c = (char)va_arg(ap, int);
+      //     // out[i_out++] = c;
+      //     PUTCHAR(c);
+      //     break;
+      // }
+      // case 'p': {
+      //     void *ptr = va_arg(ap, void *);
+      //     unsigned long addr = (unsigned long)ptr;
+      //     char buf[100];
+      //     int i_buf = 0;
+  
+      //     if (addr == 0) {
+      //         buf[i_buf++] = '0';
+      //     } else {
+      //         while (addr) {
+      //             int digit = addr % 16;
+      //             buf[i_buf++] = (digit < 10) ? (digit + '0') : (digit - 10 + 'a');
+      //             addr /= 16;
+      //         }
+      //     }
+  
+      //     // out[i_out++] = '0';
+      //     PUTCHAR('0');
+      //     // out[i_out++] = 'x';
+      //     PUTCHAR('x');
+  
+      //     for (int i = i_buf - 1; i >= 0; --i)
+      //         // out[i_out++] = buf[i];
+      //         PUTCHAR(buf[i]);
+  
+      //     break;
+      // }
+      case '%':
+          // out[i_out++] = '%';
+          PUTCHAR('%');
+          break;
       default:
           assert(0);  // 未支持的格式
       }
