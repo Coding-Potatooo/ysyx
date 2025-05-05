@@ -41,39 +41,6 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
     }
   }
 
-  #define DDDD_DEBUG
-  #ifdef DDDD_DEBUG
-  if (cpu.pc == 0x80000aa4) {
-    printf("pc: %08x, ref_pc: %08x\n", cpu.pc, ref_r->pc);
-    for (int i = 0; i < sizeof(ref_r->gpr) / sizeof(ref_r->gpr[0]); i++)
-    {
-      printf("%4s gpr[%2d] : %08x, ref_gpr[%2d]: %08x\n", reg_name(i), i, cpu.gpr[i], i, ref_r->gpr[i]);
-    }
-  }
-  if (cpu.pc == 0x80000aa8) {
-    printf("pc: %08x, ref_pc: %08x\n", cpu.pc, ref_r->pc);
-    for (int i = 0; i < sizeof(ref_r->gpr) / sizeof(ref_r->gpr[0]); i++)
-    {
-      printf("%4s gpr[%2d] : %08x, ref_gpr[%2d]: %08x\n", reg_name(i), i, cpu.gpr[i], i, ref_r->gpr[i]);
-    }
-  }
-  if (cpu.pc == 0x80000aac) {
-    printf("pc: %08x, ref_pc: %08x\n", cpu.pc, ref_r->pc);
-    for (int i = 0; i < sizeof(ref_r->gpr) / sizeof(ref_r->gpr[0]); i++)
-    {
-      printf("%4s gpr[%2d] : %08x, ref_gpr[%2d]: %08x\n", reg_name(i), i, cpu.gpr[i], i, ref_r->gpr[i]);
-    }
-  }
-  if (cpu.pc == 0x80000ab0) {
-    printf("pc: %08x, ref_pc: %08x\n", cpu.pc, ref_r->pc);
-    for (int i = 0; i < sizeof(ref_r->gpr) / sizeof(ref_r->gpr[0]); i++)
-    {
-      printf("%4s gpr[%2d] : %08x, ref_gpr[%2d]: %08x\n", reg_name(i), i, cpu.gpr[i], i, ref_r->gpr[i]);
-    }
-  }
-  #endif
-
-
   return check_res;
 }
 
