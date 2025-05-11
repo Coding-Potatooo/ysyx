@@ -17,6 +17,7 @@
 #include <memory/host.h>
 #include <memory/vaddr.h>
 #include <device/map.h>
+#include <utils.h>
 
 #define IO_SPACE_MAX (2 * 1024 * 1024)
 
@@ -67,7 +68,10 @@ word_t map_read(paddr_t addr, int len, IOMap *map) {
   check_bound(map, addr);
   paddr_t offset = addr - map->low;
   invoke_callback(map->callback, offset, len, false); // prepare data to read
-  word_t ret = host_read(map->space + offset, len);
+  word_t ret = host_read(map->space + offset, len);   // 相当于从外设中读取数据
+  #ifdef CONFIG_MTRACE
+    dlog_write("IOMap_Read: Read  [0x%08x] from addr <0x%08x> [Device: %s, Offset: %08x] \t by inst@pc<0x%08x>\n", ret, addr, map->name, offset, cpu.pc);
+  #endif
   return ret;
 }
 
@@ -75,6 +79,9 @@ void map_write(paddr_t addr, int len, word_t data, IOMap *map) {
   assert(len >= 1 && len <= 8);
   check_bound(map, addr);
   paddr_t offset = addr - map->low;
-  host_write(map->space + offset, len, data);
+  host_write(map->space + offset, len, data);         // 相当于向外设中写入数据
+  #ifdef CONFIG_MTRACE
+    dlog_write("IOMap_Write: Write [0x%08x] to addr <0x%08x> [Device: %s, Offset: %08x] \t by inst@pc<0x%08x>\n", data, addr,map->name, offset, cpu.pc);
+  #endif
   invoke_callback(map->callback, offset, len, true);
 }
