@@ -138,11 +138,6 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
 
 static int decode_exec(Decode *s)
 {
-// #define DEBUG_DDDD
-#ifdef DEBUG_DDDD
-  printf("DEBUG_DDDD:instruction[%08x]  @pc[%08x]\n", (s)->isa.inst.val, s->pc);
-#endif
-
   int rd = 0;
   word_t src1 = 0, src2 = 0, imm = 0;
   s->dnpc = s->snpc;
@@ -249,7 +244,7 @@ static int decode_exec(Decode *s)
   RV32I defines several arithmetic R-type operations. All operations read the rs1 and rs2 registers as source operands and write the result into register rd.
   The funct7 and funct3 fields select the type of operation.
   */
-  INSTPAT("0000000 ????? ????? 000 ????? 01100 11", add, R, R(rd) = src1 + src2);
+  INSTPAT("0000000 ????? ????? 000 ????? 01100 11", add, R, R(rd) = src1 + src2);                           /*ADD performs the addition of rs1 and rs2. */
   INSTPAT("0100000 ????? ????? 000 ????? 01100 11", sub, R, R(rd) = src1 - src2);                           /*SUB performs the subtraction of rs2 from rs1.*/
   INSTPAT("0000000 ????? ????? 010 ????? 01100 11", slt, R, R(rd) = (int32_t)src1 < (int32_t)src2 ? 1 : 0); /*Set Less Than: SLT and SLTU perform signed and unsigned compares respectively, writing 1 to rd if rs1 < rs2, 0 otherwise. */
   INSTPAT("0000000 ????? ????? 011 ????? 01100 11", sltu, R, R(rd) = src1 < src2 ? 1 : 0);
@@ -301,6 +296,6 @@ static int decode_exec(Decode *s)
 
 int isa_exec_once(Decode *s)
 {
-  s->isa.inst.val = inst_fetch(&s->snpc, 4);
+  s->isa.inst.val = inst_fetch(&s->snpc, 4);  //s->snpc point to pc before inst_fetch is called, s->snpc is incremented after inst_fecth and snpc is truly semantically snpc!
   return decode_exec(s);
 }

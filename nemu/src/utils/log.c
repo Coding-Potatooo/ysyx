@@ -31,6 +31,9 @@ FILE *log_ifp = NULL;
 #ifdef CONFIG_MTRACE
 FILE *log_mfp = NULL;
 #endif
+#ifdef CONFIG_DTRACE
+FILE *log_dfp = NULL;
+#endif
 #ifdef CONFIG_FTRACE
 FILE *log_ffp = NULL;
 FILE *elf_fp = NULL;
@@ -69,6 +72,14 @@ void init_log(const char *log_fpath)
   {
     char *ftrace_fname_suffix = "-ftrace";
     log_ffp = get_log_file(log_fpath,ftrace_fname_suffix);
+  }
+  #endif
+
+  #ifdef CONFIG_DTRACE
+  if (log_fpath!=NULL)
+  {
+    char *dtrace_fname_suffix = "-dtrace";
+    log_dfp = get_log_file(log_fpath,dtrace_fname_suffix);
   }
   #endif
 }

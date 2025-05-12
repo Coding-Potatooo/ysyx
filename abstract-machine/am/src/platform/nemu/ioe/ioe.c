@@ -44,6 +44,19 @@ static void *lut[128] = {
   [AM_NET_CONFIG  ] = __am_net_config,
 };
 
+/*
+这个数组定义了一个 函数指针跳转表（dispatch table），通过下标访问某个功能的处理函数，比如：
+
+void *table[128] = {
+  [4] = (void *)__am_timer_config,
+  [5] = (void *)__am_timer_rtc,
+  ...
+};
+之后可以通过：
+
+((返回类型 (*)(参数...))table[4])(...);
+来调用这个函数。这种机制常用于裸机系统、驱动抽象层、插件式架构中。
+*/
 static void fail(void *buf) { panic("access nonexist register"); }
 
 bool ioe_init() {

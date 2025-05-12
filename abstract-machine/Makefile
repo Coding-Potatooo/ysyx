@@ -62,7 +62,7 @@ LINKAGE   = $(OBJS) \
   $(addsuffix -$(ARCH).a, $(join \
     $(addsuffix /build/, $(addprefix $(AM_HOME)/, $(LIBS))), \
     $(LIBS) ))
-
+# LINKAGE = OBJS am_home/am/build/am-riscv32-nemu.a am_home/klib/build/klib-riscv32-nemu.a
 ## 3. General Compilation Flags
 
 ### (Cross) compilers, e.g., mips-linux-gnu-g++
@@ -107,7 +107,6 @@ endif
 ### Rule (compile): a single `.c` -> `.o` (gcc)
 $(DST_DIR)/%.o: %.c
 	@mkdir -p $(dir $@) && echo + CC $<
-	@echo ${OBJS}
 	@$(CC) -std=gnu11 $(CFLAGS) -c -o $@ $(realpath $<)
 
 ### Rule (compile): a single `.cc` -> `.o` (g++)
@@ -128,16 +127,14 @@ $(DST_DIR)/%.o: %.S
 ### Rule (recursive make): build a dependent library (am, klib, ...)
 # I guess the reason why using recursive make is to 
 ##  1. change work dir to control where the archives are stored.
-##  2. to set NAME, SRCS, INC_PATH
+##  2. to set NAME, SRCS, INC_PATH, which is independent from caller makefile.
+
 $(LIBS): %:
 	@$(MAKE) -s -C $(AM_HOME)/$* archive
 
 ### Rule (link): objects (`*.o`) and libraries (`*.a`) -> `IMAGE.elf`, the final ELF binary to be packed into image (ld)
 $(IMAGE).elf: $(OBJS) $(LIBS)
 	@echo + LD "->" $(IMAGE_REL).elf
-#@echo ${OBJS}
-#@echo ${LIBS}
-#@echo ${LINKAGE}
 	@$(LD) $(LDFLAGS) -o $(IMAGE).elf --start-group $(LINKAGE) --end-group
 #--start-group archives --end-group
 # The archives should be a list of archive files. 

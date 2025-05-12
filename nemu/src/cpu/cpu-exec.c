@@ -40,12 +40,13 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc)
   store_inst2logbuf(_this);
 #endif
 
-#ifdef CONFIG_ITRACE_IRINGBUF
+#if defined(CONFIG_ITRACE) && defined(CONFIG_ITRACE_IRINGBUF)
   irb_add(_this->logbuf);
-
-#else // enabling IRINGBUF will disable the normal functioning of ITRACE(not every instruction will be logged, only the most recent CONFIG_IRINGBUF_SIZE will be logged.)
-  // printf("%s\n",_this->logbuf);
+#elif defined(CONFIG_ITRACE) && !defined(CONFIG_ITRACE_IRINGBUF)
   log_write("%s\n", _this->logbuf);
+  // enabling IRINGBUF will disable the normal functioning of ITRACE(not every instruction will be logged, only the most recent CONFIG_IRINGBUF_SIZE will be logged.)
+#else 
+  // ITRACE OFF
 #endif
 
   if (g_print_step) // g_print_step is true only when using si CNT and CNT is less than MAX_INST_TO_PRINT.
@@ -64,12 +65,13 @@ static void exec_once(Decode *s, vaddr_t pc)
   isa_exec_once(s);
   /* In nemu, when the instruction is executed, pc is pointed to the instruction executing (otherwise, how to fecth and decode inst without the guidance of PC?).
     After the instruction execution is complete, pc is updated.
-    TODO: What about real circuits?...what's the behavior of sequence circuits???
+    What about real circuits?
   */
   cpu.pc = s->dnpc; // update pc.
 
   /*
-   // refactored to trace_and_difftest.ics
+    // refactored to trace_and_difftest.ics
+    
     // #ifdef CONFIG_ITRACE // store instruction log information to s->logbuf
     //   char *p = s->logbuf;
     //   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);  // 0x80000000:

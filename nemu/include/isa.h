@@ -20,7 +20,12 @@
 #include <isa-def.h>
 
 // The macro `__GUEST_ISA__` is defined in $(CFLAGS).
-// It will be expanded as "x86" or "mips32" ...
+// It will be expanded as "riscv32" "x86" "mips32"  ...
+
+/*
+__GUEST_ISA__ 是一个 宏（macro），所以在展开 concat(__GUEST_ISA__, _CPU_state) 时，会先被展开为它的定义值（比如 riscv32）；
+而 _CPU_state 不是宏，只是一个普通的 token（标识符），没有定义过，所以不会被展开，直接保留原样。
+*/
 typedef concat(__GUEST_ISA__, _CPU_state) CPU_state;
 
 // riscv32_ISADecodeInfo  

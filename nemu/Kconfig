@@ -170,7 +170,11 @@ config FTRACE
   depends on TRACE
   bool "Enable Function tracer"
   default n
-  
+
+config DTRACE
+  depends on TRACE
+  bool "Enable Device tracer"
+  default n
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
