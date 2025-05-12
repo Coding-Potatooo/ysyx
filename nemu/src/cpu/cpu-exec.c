@@ -69,7 +69,7 @@ static void exec_once(Decode *s, vaddr_t pc)
   cpu.pc = s->dnpc; // update pc.
 
   /*
-   // refactored to trace_and_difftest.
+   // refactored to trace_and_difftest.ics
     // #ifdef CONFIG_ITRACE // store instruction log information to s->logbuf
     //   char *p = s->logbuf;
     //   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);  // 0x80000000:
